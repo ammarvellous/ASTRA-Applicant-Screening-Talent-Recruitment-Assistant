@@ -1,0 +1,24 @@
+# UI framework
+streamlit>=1.35.0
+
+# Database
+pymongo>=4.7.0         # MongoDB Atlas client
+dnspython>=2.4.2       # needed for MongoDB Atlas SRV connections
+
+# Data validation
+pydantic>=2.7.0
+pydantic[email]>=2.7.0
+
+# Resume parsing helpers (optional but handy)
+PyPDF2>=3.0.1          # PDF parsing
+python-docx>=1.0.1     # DOCX parsing
+
+# Env management
+python-dotenv>=1.0.1
+
+# LangChain + IBM watsonx integration
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-ibm>=0.1.0   # 👈 required for ChatWatsonx
+ibm-watsonx-ai>=1.0.7  # 👈 official IBM SDK
+genai>=0.16.0

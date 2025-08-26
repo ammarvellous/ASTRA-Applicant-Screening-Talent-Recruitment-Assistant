@@ -1,0 +1,65 @@
+```json
+{
+  "name": "Mohammad Ammar",
+  "email": "mdammar1612@gmail.com",
+  "phone": "+91 7365993869",
+  "location": null,
+  "years_experience": 0,
+  "tech_stack": ["Python", "Java", "C++", "R", "JavaScript", "MySQL", "Docker", "CI/CD", "TensorFlow", "OpenCV", "Flask", "FastAPI", "MongoDB Atlas", "Langflow", "React", "Node.js"],
+  "desired_positions": [],
+  "projects": [
+    {
+      "name": "Sign Language Prediction",
+      "description": "Engineered a CNN-based Sign Language Recognition model using the MNIST dataset, achieving 92%+ accuracy by leveraging convolution, pooling, and data augmentation techniques.",
+      "technologies": []
+    },
+    {
+      "name": "Early detection of ADHD disease",
+      "description": "Developed an advanced deep learning framework integrating spatial and temporal fMRI scan data, reducing diagnostic time by 40% for clinical practitioners.",
+      "technologies": []
+    },
+    {
+      "name": "Craft Connect",
+      "description": "Developed a full-stack local services platform that connects users with professionals like electricians, plumbers, and carpenters.Engineered a serverless backend utilizing Node.js, increasing API response rate by 60ms and enabling the application to handle 500 concurrent users with zero downtime..Implemented an AI chatbot for instant user queries, geolocation-based service matching, and dynamic pricing algorithms for cost optimization.",
+      "technologies": ["Node.js"]
+    },
+    {
+      "name": "Insight Scraper",
+      "description": "Built a web-based intelligent scraper that integrates LLMs and web automation to extract and analyze structured data from any website.",
+      "technologies": []
+    },
+    {
+      "name": "Automated quality control of satellite data",
+      "description": "Developed a framework for automated quality control of satellite data, flagging over 1,000 anomalies per month and ensuring data integrity for downstream applications.",
+      "technologies": []
+    }
+  ]
+}
+```
+
+Traceback (most recent call last):
+  File "/workspaces/ASTRA-Applicant-Screening-Talent-Recruitment-Assistant/resume_parser.py", line 37, in parse
+    return json.loads(text)
+           ^^^^^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/codespace/.python/current/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspaces/ASTRA-Applicant-Screening-Talent-Recruitment-Assistant/resume_parser.py", line 166, in <module>
+    parse_resume_to_json(resume_text)
+  File "/workspaces/ASTRA-Applicant-Screening-Talent-Recruitment-Assistant/resume_parser.py", line 112, in parse_resume_to_json
+    data = parser.parse(output_text)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspaces/ASTRA-Applicant-Screening-Talent-Recruitment-Assistant/resume_parser.py", line 39, in parse
+    raise OutputParserException(f"Invalid JSON: {e}")
+langchain_core.exceptions.OutputParserException: Invalid JSON: Expecting value: line 1 column 1 (char 0)
+For troubleshooting, visit: https://python.langchain.com/docs/troubleshooting/errors/OUTPUT_PARSING_FAILURE 
