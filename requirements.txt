@@ -17,6 +17,7 @@ python-docx>=1.0.1     # DOCX parsing
 python-dotenv>=1.0.1
 
 # LangChain + IBM watsonx integration
+langchain_google_genai
 langchain>=0.2.0
 langchain-community>=0.2.0
 langchain-ibm>=0.1.0   # 👈 required for ChatWatsonx

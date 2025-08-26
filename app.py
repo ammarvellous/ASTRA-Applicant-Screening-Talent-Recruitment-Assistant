@@ -3,15 +3,17 @@ import streamlit as st
 from db_utils import save_candidate
 from helpers import *
 from interview import start_interview
+import streamlit.components.v1 as components
 
 # ---------- Config ----------
 st.set_page_config(page_title="ASTRA-Applicant-Screening-Talent-Recruitment-Assistant", layout="centered")
 
 # ---------- UI ----------
 st.title("ASTRA-Applicant-Screening-Talent-Recruitment-Assistant")
+
 st.write("Welcome! Choose how to provide candidate details — manually, or upload a resume to autofill.")
 
-choice = st.radio("Get started by:", ("Manual fill", "Autofill from resume (upload)"))
+choice = st.radio("Get started by:", ("Manual fill", "Autofill from resume (upload)"), index=1)
 
 # Candidate state holder
 if "candidate" not in st.session_state:
@@ -26,6 +28,10 @@ if "candidate" not in st.session_state:
     }
 if "raw_resume_text" not in st.session_state:
     st.session_state.raw_resume_text = ""
+
+# Add a flag to track if candidate has been saved to DB
+if "candidate_saved_to_db" not in st.session_state:
+    st.session_state.candidate_saved_to_db = False
 
 if choice == "Autofill from resume (upload)":
     with st.expander("Upload resume (PDF / DOCX / TXT)", expanded=True): 
@@ -56,8 +62,12 @@ if choice == "Autofill from resume (upload)":
                 candidate_data = parse_resume_to_json(parsed_text)
                 st.json(candidate_data.model_dump())
                 
-                # Save to MongoDB - using the Pydantic object directly
-                print(save_candidate(candidate_data))
+                # Save to MongoDB only if not already saved
+                if not st.session_state.candidate_saved_to_db:
+                    result = save_candidate(candidate_data)
+                    print(result)
+                    st.session_state.candidate_saved_to_db = True
+                
                 # Store in session state as a dictionary for consistency
                 st.session_state.candidate = candidate_data.model_dump()
                 
@@ -108,7 +118,18 @@ with st.expander("Candidate details (review & edit)", expanded=True if choice=="
             c["desired_positions"] = [p.strip() for p in desired.split(",") if p.strip()]
             c["tech_stack"] = [t.strip() for t in tech_text.split(",") if t.strip()]
             st.session_state.candidate = c
-            st.success("Candidate information saved to session. Next: question generation or review.")
+            
+            # Save to database only if this is new data (manual entry)
+            if not st.session_state.candidate_saved_to_db:
+                from resume_parser import CandidateData
+                try:
+                    candidate_obj = CandidateData(**c)
+                    save_candidate(candidate_obj)
+                    st.session_state.candidate_saved_to_db = True
+                except Exception as e:
+                    st.error(f"Error saving to database: {e}")
+            
+            st.success("Candidate information saved.")
             st.markdown("**Candidate summary:**")
             st.write({
                 "name": c["name"],
@@ -117,10 +138,10 @@ with st.expander("Candidate details (review & edit)", expanded=True if choice=="
                 "location": c["location"],
                 "years_experience": c["years_experience"],
                 "desired_positions": c["desired_positions"],
-                "tech_stack": c["tech_stack"]
+                "tech_stack": c["tech_stack"] if c["tech_stack"] else []
             })
             # Placeholder: call your question generator here or navigate to screening flow
-            st.info("Now you can use this info to generate technical questions (LLM or heuristics).")
+            st.info("Please proceed to next section!")
 
     # Export candidate JSON
     if st.button("Download candidate JSON"):
@@ -206,10 +227,11 @@ if st.session_state.candidate:
 else:
     st.info("Please complete your candidate profile before starting the interview.")
 
+#while the interview is initialiazing give the user a loader for it
+
 # ---------- Example: where to plug LLM-based parsing or DB ----------
 st.write("---")
-st.subheader("Integration hints (developer)")
+st.subheader("Thank you!!!")
 st.markdown("""
-
-- **Context-aware chat**: for multi-turn, use LangChain to manage chains and memory, or keep a short conversation window and pass a summarized candidate profile to the LLM on every chat call.
+We will be in touch
 """)

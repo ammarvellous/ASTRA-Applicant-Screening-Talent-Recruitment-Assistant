@@ -4,12 +4,11 @@ import json
 from typing import List, Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, EmailStr, conint, ValidationError
-from langchain_ibm import ChatWatsonx
-from ibm_watsonx_ai.foundation_models.schema import TextChatParameters
+from llm_loader import get_llm, get_watsonx_llm, get_gemini_llm
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.schema import BaseOutputParser, OutputParserException
-from gemini_llm import GeminiLLM  # import our wrapper
+# import BaseOutputParser
 
 load_dotenv()
 
@@ -40,24 +39,12 @@ class JSONOutputParser(BaseOutputParser):
 
 
 # ------------------ LLM Setup ------------------
-def get_watsonx_llm():
-    watsonx_apikey = os.getenv("WATSONX_APIKEY")
-    watsonx_project_id = os.getenv("WATSONX_PROJECT_ID")
-    watsonx_url = os.getenv("WATSONX_URL")
-
-    parameters = TextChatParameters(
-        max_tokens=500,
-        temperature=0.0,
-        top_p=1
-    )
-
-    return ChatWatsonx(
-        model_id="meta-llama/llama-3-3-70b-instruct",
-        url=watsonx_url,
-        apikey=watsonx_apikey,
-        project_id=watsonx_project_id,
-        params=parameters,
-    )
+def get_parser_llm(provider="watsonx"):
+    """Get the appropriate LLM for resume parsing"""
+    if provider == "watsonx":
+        return get_watsonx_llm(model_id="ibm/granite-13b-instruct-v2")
+    else:
+        return get_gemini_llm(model_name="gemini-1.5-flash", temperature=0)
 
 
 # ------------------ Prompt ------------------
@@ -91,15 +78,15 @@ prompt = PromptTemplate(
 
 
 # ------------------ Chain ------------------
-# chain = prompt | get_watsonx_llm()
+chain = prompt | get_parser_llm()
 
-chain = prompt | GeminiLLM(model_name="gemini-1.5-flash", temperature=0)
+# chain = prompt | GeminiLLM(model_name="gemini-1.5-flash", temperature=0)
 
 def parse_resume_to_json(resume_text: str) -> CandidateData:
     """
     Parse resume text into CandidateData via Watsonx + validation.
     """
-    raw_output = chain.invoke({"resume_text": resume_text})
+    raw_output = chain.invoke({"resume_text": resume_text}).content
 
     # Extract the content string from the AIMessage
     if hasattr(raw_output, "content"):
@@ -169,4 +156,4 @@ Soft Skills: Rapid learning, problem-solving, adaptability, effective communicat
 
 if __name__ == "__main__":
 #     # Simple LLM sanity check
-    parse_resume_to_json(resume_text)
+    print(parse_resume_to_json(resume_text))
