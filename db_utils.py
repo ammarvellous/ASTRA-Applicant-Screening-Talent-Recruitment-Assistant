@@ -15,7 +15,14 @@ def save_candidate(candidate):
     Saves a CandidateData object into MongoDB.
     """
     if candidates_col.find_one({"email": candidate.email}):
-        st.warning("Candidate already exists in DB.")
+        return "Candidate already exists in DB."
     else:
         candidates_col.insert_one(candidate.dict())
-        print("Candidate saved to MongoDB.")
+        return "Candidate saved to MongoDB."
+
+def save_candidate_response(candidate_id, question, answer):
+    db.responses.insert_one({
+        "candidate_id": candidate_id,
+        "question": question,
+        "answer": answer
+    })
