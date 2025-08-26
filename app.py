@@ -129,36 +129,40 @@ if choice == "Autofill from resume (upload)":
 
         # after extracting resume text
         try:
-            candidate = parse_resume_to_json(parsed_text)
-            print(candidate.dict())
-            st.json(candidate.dict())   # just to preview
-            # candidate.dict() can be stored directly in MongoDB
+            # Parse the resume into a CandidateData object
+            candidate_data = parse_resume_to_json(parsed_text)
+            
+            # Display the parsed data
+            st.json(candidate_data.model_dump())
+            
+            # Save to MongoDB - using the Pydantic object directly
+            save_candidate(candidate_data)
+            
+            # Store in session state as a dictionary for consistency
+            st.session_state.candidate = candidate_data.model_dump()
+            
+            if not parsed_text.strip():
+                st.info("No text was extracted — you can still paste resume text below or fill fields manually.")
+            else:
+                st.success("Parsed resume text")
+                st.text_area("Parsed resume", parsed_text, height=200)
+                
+                # Get autofill data
+                autofill = autofill_fields_from_text(parsed_text)
+                
+                # Update the dictionary in session state directly
+                st.session_state.candidate.update({
+                    "name": autofill["name"] if not st.session_state.candidate.get("name") else st.session_state.candidate["name"],
+                    "email": autofill["email"] if not st.session_state.candidate.get("email") else st.session_state.candidate["email"],
+                    "phone": autofill["phone"] if not st.session_state.candidate.get("phone") else st.session_state.candidate["phone"],
+                    "location": autofill["location"] if not st.session_state.candidate.get("location") else st.session_state.candidate["location"],
+                    "years_experience": autofill["years_experience"] if not st.session_state.candidate.get("years_experience") else st.session_state.candidate["years_experience"],
+                    "tech_stack": autofill["tech_stack"] if not st.session_state.candidate.get("tech_stack") else st.session_state.candidate["tech_stack"]
+                })
 
         except ValidationError as ve:
             st.error(f"Validation failed: {ve}")
-
-        # Save to MongoDB
-        save_candidate(candidate)
-        st.success("Candidate saved successfully!")
         
-        # Store in session for further chat
-        st.session_state.candidate = candidate
-
-        if not parsed_text.strip():
-            st.info("No text was extracted — you can still paste resume text below or fill fields manually.")
-        else:
-            st.success("Parsed resume text")
-            st.text_area("Parsed resume", parsed_text, height=200)
-            # Autofill
-            autofill = autofill_fields_from_text(parsed_text)
-            st.session_state.candidate.update({
-                "name": autofill["name"],
-                "email": autofill["email"],
-                "phone": autofill["phone"],
-                "location": autofill["location"],
-                "years_experience": autofill["years_experience"],
-                "tech_stack": autofill["tech_stack"]
-            })
     else:
         st.info("Upload a resume to try autofill. Or switch to Manual fill.")
 
@@ -199,13 +203,6 @@ if choice == "Manual fill" or True:
             # Placeholder: call your question generator here or navigate to screening flow
             st.info("Now you can use this info to generate technical questions (LLM or heuristics).")
 
-# Shortcuts & tips
-st.write("---")
-st.subheader("Notes & next steps")
-st.markdown("""
-- You can store the `st.session_state.candidate` into MongoDB Atlas (example commented in next section).
-""")
-
 # Export candidate JSON
 if st.button("Download candidate JSON"):
     st.download_button("Download JSON", str(st.session_state.candidate), file_name="candidate.json")
@@ -214,8 +211,6 @@ if st.button("Download candidate JSON"):
 st.write("---")
 st.subheader("Integration hints (developer)")
 st.markdown("""
-
-- **Saving to MongoDB Atlas**: use `pymongo`. Store candidate doc in `candidates` and transcripts in `transcripts`. Do **not** store API keys or secrets in the transcript.
 
 - **Context-aware chat**: for multi-turn, use LangChain to manage chains and memory, or keep a short conversation window and pass a summarized candidate profile to the LLM on every chat call.
 """)
