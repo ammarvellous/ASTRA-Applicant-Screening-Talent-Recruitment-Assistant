@@ -49,20 +49,25 @@ ASTRA-Applicant-Screening-Talent-Recruitment-Assistant/
 ```bash
 git clone https://github.com/yourusername/ASTRA-Applicant-Screening-Talent-Recruitment-Assistant.git
 cd ASTRA-Applicant-Screening-Talent-Recruitment-Assistant
+```
 
-2️⃣ Install Dependencies
+### 2️⃣ Install Dependencies
+```bash
 pip install -r requirements.txt
+```
 
-3️⃣ Set Up Environment
+### 3️⃣ Set Up Environment
 
 Create a .env file with:
-
+```bash
 MONGODB_URI="your-mongodb-atlas-uri"
 GOOGLE_API_KEY="your-gemini-api-key"
 WATSONX_API_KEY="your-watsonx-api-key"
-
+```
 4️⃣ Run App
+```bash
 streamlit run app.py
+```
 
 💡 Usage Flow
 
@@ -95,6 +100,3 @@ PRs and feature requests are welcome!
 📜 License
 
 MIT License © 2025 YourName
-
-
-Would you like me to also include **badges** (like Python version, Streamlit, LangChain, MongoDB) at th
