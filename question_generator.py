@@ -1,8 +1,4 @@
 from typing import List, Dict, Any
-from langchain.prompts import PromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
-from resume_parser import CandidateData
-import os
 import random
 from llm_loader import get_llm
 

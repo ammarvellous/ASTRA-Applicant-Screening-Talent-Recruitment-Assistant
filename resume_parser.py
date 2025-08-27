@@ -39,7 +39,7 @@ class JSONOutputParser(BaseOutputParser):
 
 
 # ------------------ LLM Setup ------------------
-def get_parser_llm(provider="watsonx"):
+def get_parser_llm(provider="gemini"):
     """Get the appropriate LLM for resume parsing"""
     if provider == "watsonx":
         return get_watsonx_llm(model_id="ibm/granite-13b-instruct-v2")
@@ -86,7 +86,8 @@ def parse_resume_to_json(resume_text: str) -> CandidateData:
     """
     Parse resume text into CandidateData via Watsonx + validation.
     """
-    raw_output = chain.invoke({"resume_text": resume_text}).content
+    raw_output = chain.invoke({"resume_text": resume_text}) # for gemini based response
+    # raw_output = chain.invoke({"resume_text": resume_text}).content # for watsonx based response
 
     # Extract the content string from the AIMessage
     if hasattr(raw_output, "content"):
