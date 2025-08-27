@@ -2,7 +2,7 @@ from typing import List, Dict, Any
 import random
 from llm_loader import get_llm
 
-llm = get_llm("watsonx")
+llm = get_llm("gemini")
 
 def generate_tech_questions(candidate: Dict[str, Any]) -> List[str]:
     """Generate questions about the candidate's technical skills"""

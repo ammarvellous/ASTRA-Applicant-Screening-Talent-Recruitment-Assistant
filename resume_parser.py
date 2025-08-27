@@ -23,7 +23,7 @@ class CandidateData(BaseModel):
     email: EmailStr
     phone: str
     location: Optional[str]
-    years_experience: conint(ge=0, le=60)
+    years_experience: int
     tech_stack: List[str]
     desired_positions: Optional[List[str]] = []
     projects: Optional[List[Project]] = []
