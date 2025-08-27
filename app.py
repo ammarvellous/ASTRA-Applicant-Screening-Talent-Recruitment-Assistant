@@ -124,8 +124,10 @@ with st.expander("Candidate details (review & edit)", expanded=True if choice=="
                 from resume_parser import CandidateData
                 try:
                     candidate_obj = CandidateData(**c)
-                    save_candidate(candidate_obj)
+                    message, candidate_id = save_candidate(candidate_obj)
+                    st.session_state.candidate["_id"] = candidate_id  # Store the ID
                     st.session_state.candidate_saved_to_db = True
+                    st.success(message)
                 except Exception as e:
                     st.error(f"Error saving to database: {e}")
             
@@ -229,9 +231,10 @@ else:
 
 #while the interview is initialiazing give the user a loader for it
 
-# ---------- Example: where to plug LLM-based parsing or DB ----------
+# ---------- Greeting ----------
 st.write("---")
 st.subheader("Thank you!!!")
 st.markdown("""
-We will be in touch
-""")
+            Thank you for completing the interview process!
+            We will be in touch with you shortly.
+            """)

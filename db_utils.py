@@ -16,13 +16,16 @@ evaluated_responses_col = db["evaluated_responses"]
 
 def save_candidate(candidate):
     """
-    Saves a CandidateData object into MongoDB.
+    Saves a CandidateData object into MongoDB and returns the document ID.
     """
     if candidates_col.find_one({"email": candidate.email}):
-        return "Candidate already exists in DB."
+        # Return existing candidate ID
+        existing = candidates_col.find_one({"email": candidate.email})
+        return "Candidate already exists in DB.", str(existing["_id"])
     else:
-        candidates_col.insert_one(candidate.dict())
-        return "Candidate saved to MongoDB."
+        # Insert and return new ID
+        result = candidates_col.insert_one(candidate.dict())
+        return "Candidate saved to MongoDB.", str(result.inserted_id)
 
 def save_candidate_response(candidate_id, question, answer):
     """

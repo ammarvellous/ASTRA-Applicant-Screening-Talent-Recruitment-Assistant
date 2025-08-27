@@ -1,27 +1,43 @@
 import streamlit as st
 import time
 import random
-import os
 from datetime import datetime
 from db_utils import save_candidate_response
 from question_generator import generate_tech_questions, generate_project_questions, generate_job_questions
 import streamlit.components.v1 as components
 
 def save_answer(candidate, question, answer):
-    """Save answer to session state and optionally to database"""
+    """Save answer to session state and database"""
     if "answers" not in st.session_state:
         st.session_state.answers = []
     
+    # Add to session state
+    timestamp = datetime.now()
     st.session_state.answers.append({
         "candidate": candidate['name'],
         "question": question,
         "answer": answer,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S")
     })
     
-    # Optionally save to database if candidate_id is available
-    if "candidate_id" in candidate:
-        save_candidate_response(candidate["candidate_id"], question, answer)
+    # Save to database - get candidate_id from session state
+    candidate_id = candidate.get("_id")
+    
+    # If we don't have an ID but have an email, try to look it up
+    if not candidate_id and "email" in candidate:
+        from db_utils import candidates_col
+        existing = candidates_col.find_one({"email": candidate["email"]})
+        if existing:
+            candidate_id = str(existing["_id"])
+            # Store for future use
+            st.session_state.candidate["_id"] = candidate_id
+    
+    if candidate_id:
+        save_candidate_response(candidate_id, question, answer)
+    else:
+        st.warning("Could not save response to database - candidate ID not found")
+        # Log this for debugging
+        print(f"Warning: Response not saved to DB. Candidate data: {candidate.keys()}")
 
 def initialize_interview():
     """Initialize interview state if not already done"""
@@ -53,12 +69,12 @@ def initialize_interview():
         st.session_state.interview_completed = False
         st.session_state.time_limit = 5.0  # 5 seconds for testing
         st.session_state.start_time = None
+        print(f"Interview Questions: {st.session_state.interview_questions}")  # Debugging line
 
 def start_interview(candidate):
     """Main interview function"""
     # Initialize interview if needed
     initialize_interview()
-    print(f"Interview Questions: {st.session_state.interview_questions}")  # Debugging line
     
     # Display interview progress
     total_questions = len(st.session_state.interview_questions)
@@ -66,7 +82,7 @@ def start_interview(candidate):
     
     # Interview progress indicator
     progress_text = f"Question {current_index + 1} of {total_questions}"
-    progress_value = (current_index + 1) / total_questions
+    progress_value = (current_index + 1) // total_questions
     
     st.progress(progress_value, text=progress_text)
     
@@ -96,22 +112,21 @@ def start_interview(candidate):
             st.session_state.start_time = time.time()
             st.session_state.current_answer = ""
         
+        # Calculate elapsed time (in backend)
+        elapsed = time.time() - st.session_state.start_time
         
-        # Timer progress bar
-        st.markdown("""
+        # Timer UI component (shows 30s for better UX, but backend uses time_limit)
+        components.html("""
+            <div id="timer">⏱️ 30s left</div>
             <script>
             let limit = 30;
-            function startTimer() {
-                let timer = setInterval(function() {
-                    document.getElementById("timer").innerHTML = "⏱️ " + limit + "s left";
-                    limit -= 1;
-                    if (limit < 0) clearInterval(timer);
-                }, 1000);
-            }
+            let timer = setInterval(function() {
+                document.getElementById("timer").innerHTML = "⏱️ " + limit + "s left";
+                limit -= 1;
+                if (limit < 0) clearInterval(timer);
+            }, 1000);
             </script>
-            <div id="timer">⏱️ 30s left</div>
-            <script>startTimer();</script>
-        """, unsafe_allow_html=True)
+        """, height=50)
 
         # Answer input
         answer = st.text_area("Your answer:", 
@@ -122,7 +137,17 @@ def start_interview(candidate):
         # Update current answer in session state
         st.session_state.current_answer = answer
         
-        # Check if time's up
+        # Allow manual submission
+        if st.button("  Submit Answer", key=f"submit_{current_index}"):
+            # Save answer
+            save_answer(candidate, current_question, answer)
+            
+            # Move to next question
+            st.session_state[f"submitted_{current_index}"] = True
+            st.session_state.current_question_index += 1
+            st.session_state.start_time = None  # Reset timer for next question
+            st.rerun()
+
         if elapsed >= st.session_state.time_limit:
             if not st.session_state.get(f"submitted_{current_index}", False):
                 st.warning("Time's up! Moving to next question...")
@@ -135,17 +160,6 @@ def start_interview(candidate):
                 st.session_state.current_question_index += 1
                 st.session_state.start_time = None  # Reset timer for next question
                 st.rerun()
-        
-        # Allow manual submission
-        if st.button("Submit Answer", key=f"submit_{current_index}"):
-            # Save answer
-            save_answer(candidate, current_question, answer)
-            
-            # Move to next question
-            st.session_state[f"submitted_{current_index}"] = True
-            st.session_state.current_question_index += 1
-            st.session_state.start_time = None  # Reset timer for next question
-            st.rerun()
     else:
         # All questions answered, mark interview as completed
         st.session_state.interview_completed = True
@@ -164,19 +178,5 @@ def show_interview_summary():
             with st.expander(f"Question {i+1}: {qa['question']}"):
                 st.write("**Your answer:**")
                 st.write(qa["answer"])
-    
-    # Reset button
-    if st.button("Start New Interview"):
-        # Clear interview state
-        for key in ["interview_questions", "current_question_index", 
-                   "start_time", "current_answer", 
-                   "interview_completed", "interview_stage"]:
-            if key in st.session_state:
-                del st.session_state[key]
-        
-        # Clear submissions
-        for key in list(st.session_state.keys()):
-            if key.startswith("submitted_"):
-                del st.session_state[key]
                 
         st.rerun()
