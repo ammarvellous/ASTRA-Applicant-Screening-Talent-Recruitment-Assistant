@@ -24,8 +24,11 @@ def generate_tech_questions(candidate: Dict[str, Any]) -> List[str]:
     """
     
     response = llm.invoke(prompt)
+    # Handle both string responses and objects with 'content' attribute
+    response_text = response.content if hasattr(response, "content") else str(response)
+    
     # Extract questions from the response
-    questions = [line.strip() for line in response.content.split("\n") 
+    questions = [line.strip() for line in response_text.split("\n") 
                 if line.strip() and not line.strip().isdigit() and len(line) > 10]
     return questions[:2]  # Return maximum 2 questions
 
@@ -61,8 +64,11 @@ def generate_project_questions(candidate: Dict[str, Any]) -> List[str]:
     """
     
     response = llm.invoke(prompt)
+    # Handle both string responses and objects with 'content' attribute
+    response_text = response.content if hasattr(response, "content") else str(response)
+    
     # Extract questions from the response
-    questions = [line.strip() for line in response.content.split("\n") 
+    questions = [line.strip() for line in response_text.split("\n") 
                 if line.strip() and not line.strip().isdigit() and len(line) > 10]
     return questions[:2]  # Return maximum 2 questions
 
@@ -74,7 +80,10 @@ def generate_job_questions(job_role: str) -> List[str]:
     Return only a numbered list of questions.
     """
     response = llm.invoke(prompt)
+    # Handle both string responses and objects with 'content' attribute
+    response_text = response.content if hasattr(response, "content") else str(response)
+    
     # Extract questions from the response
-    questions = [line.strip() for line in response.content.split("\n") 
+    questions = [line.strip() for line in response_text.split("\n") 
                 if line.strip() and not line.strip().isdigit() and len(line) > 10]
     return questions[:2]  # Return maximum 2 questions
